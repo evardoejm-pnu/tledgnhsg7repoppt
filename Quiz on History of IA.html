@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial Arts Quiz - Interactive Mode</title>
+    <style>
+        :root {
+            --primary: #1a252f;
+            --secondary: #2980b9;
+            --success: #1e7e34;
+            --error: #bd2130;
+            --bg: #fdfdfd;
+            --text: #212529;
+        }
+
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: var(--bg); 
+            display: flex; 
+            justify-content: center; 
+            padding: 20px; 
+            line-height: 1.6;
+            color: var(--text);
+        }
+
+        .quiz-container { 
+            background: white; 
+            width: 100%; 
+            max-width: 800px; 
+            padding: 40px; 
+            border: 3px solid var(--primary);
+            border-radius: 15px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15); 
+        }
+        
+        h2 { font-size: 2rem; color: var(--primary); margin-bottom: 25px; }
+
+        .progress { 
+            font-size: 1.2rem; 
+            font-weight: bold;
+            color: #555; 
+            margin-bottom: 20px; 
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .option { 
+            display: flex;
+            align-items: center;
+            width: 100%; 
+            padding: 18px; 
+            margin: 12px 0; 
+            border: 3px solid #ccc; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            text-align: left; 
+            background: #fff; 
+            transition: 0.2s;
+            font-size: 1.3rem;
+            font-weight: 500;
+        }
+
+        .option-letter {
+            font-weight: 900;
+            margin-right: 15px;
+            font-size: 1.4rem;
+            color: var(--secondary);
+        }
+
+        .option:hover { 
+            border-color: var(--secondary); 
+            background: #f8fbff; 
+        }
+        
+        /* Specific state styles */
+        .option.correct-selected { 
+            background-color: #e6ffed !important; 
+            border-color: var(--success) !important; 
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .option.wrong-selected { 
+            background-color: #fff5f5 !important; 
+            border-color: var(--error) !important; 
+            color: var(--error);
+        }
+        
+        .feedback-box { 
+            margin-top: 25px; 
+            padding: 20px; 
+            border-radius: 10px; 
+            font-size: 1.2rem;
+            border: 2px solid var(--secondary);
+            background: #f0f7ff;
+            display: none;
+        }
+
+        .feedback-box.visible { display: block; }
+
+        .controls { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-top: 40px; 
+        }
+
+        button.nav-btn { 
+            padding: 15px 35px; 
+            font-size: 1.2rem;
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            background: var(--primary); 
+            color: white; 
+            font-weight: bold; 
+            text-transform: uppercase;
+        }
+
+        button.nav-btn:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div class="progress" id="progress">Question 1 of 20</div>
+    <div id="quiz-content">
+        <h2 id="question-text">Question loading...</h2>
+        <div id="options-container"></div>
+        <div id="feedback" class="feedback-box"></div>
+    </div>
+    
+    <div class="controls">
+        <button class="nav-btn" id="prev-btn" onclick="changeQuestion(-1)">← Previous</button>
+        <button class="nav-btn" id="next-btn" onclick="changeQuestion(1)">Next →</button>
+    </div>
+</div>
+
+<script>
+    const letters = ["A", "B", "C", "D"];
+    const quizData = [
+        {
+            q: "What was the primary invention that powered the First Industrial Revolution?",
+            options: ["The light bulb", "The steam engine", "The internet", "The telephone"],
+            correct: 1,
+            desc: "The steam engine (perfected by James Watt) was the heart of the First Industrial Revolution, allowing factories to move away from water sources."
+        },
+        {
+            q: "Which industry was significantly transformed and expanded during the First Industrial Revolution?",
+            options: ["Textile industry", "Automotive industry", "Computer industry", "Aerospace industry"],
+            correct: 0,
+            desc: "The Textile industry was the first to be mechanized using water and steam power."
+        },
+        {
+            q: "The Second Industrial Revolution was characterized by the growth of which type of production?",
+            options: ["Hand-crafted production", "Mass production", "3D printing", "Digital production"],
+            correct: 1,
+            desc: "The Second Industrial Revolution introduced assembly lines and electricity, making mass production possible."
+        },
+        {
+            q: "Which of these inventions emerged during the Second Industrial Revolution?",
+            options: ["The steam engine", "The personal computer", "The internal combustion engine", "Artificial Intelligence"],
+            correct: 2,
+            desc: "The internal combustion engine (along with electricity and steel) defined the late 19th and early 20th centuries."
+        },
+        {
+            q: "What is another name for the Third Industrial Revolution?",
+            options: ["The Steam Revolution", "The Digital Revolution", "The Mechanical Revolution", "The AI Revolution"],
+            correct: 1,
+            desc: "The Third Revolution is the 'Digital Revolution,' beginning in the late 20th century with electronics and computers."
+        },
+        {
+            q: "Which technology was a key advancement during the Third Industrial Revolution?",
+            options: ["The semiconductor", "The steam engine", "3D printing", "The light bulb"],
+            correct: 0,
+            desc: "The semiconductor is the foundation of modern computers and digital tech."
+        },
+        {
+            q: "How is the Fourth Industrial Revolution described in terms of its relationship with humans?",
+            options: ["It keeps technology and human life completely separate.", "Technology is merging more deeply with human lives.", "It focuses only on manual hand tools.", "It marks a return to prehistoric tool-making."],
+            correct: 1,
+            desc: "Industry 4.0 involves the fusion of technologies that blur the lines between the physical, digital, and biological spheres."
+        },
+        {
+            q: "Which of the following is an example of an innovation from the Fourth Industrial Revolution?",
+            options: ["The telephone", "The steel industry", "Autonomous vehicles", "Manual woodworking"],
+            correct: 2,
+            desc: "Autonomous vehicles use AI and IoT, which are hallmarks of the 4th Revolution."
+        },
+        {
+            q: "What is one major social concern raised by the Fourth Industrial Revolution?",
+            options: ["Lack of electricity", "Job displacement", "Slow communication", "The invention of the steam engine"],
+            correct: 1,
+            desc: "Automation and AI raise concerns about jobs being replaced by machines."
+        },
+        {
+            q: "What is the primary aim of Industrial Arts as a subject in schools?",
+            options: ["To teach history only", "To develop manual skills and familiarity with tools and machines", "To focus exclusively on singing and dancing", "To learn how to use digital social media only"],
+            correct: 1,
+            desc: "Industrial Arts focuses on 'hands-on' learning, teaching students how to use tools to create and repair."
+        },
+        {
+            q: "Industrial Arts education features the fabrication of objects primarily using which materials?",
+            options: ["Paper and plastic", "Wood or metal", "Fabric and yarn", "Food and chemicals"],
+            correct: 1,
+            desc: "Traditional Industrial Arts are centered on woodworking, metalworking, and craftsmanship."
+        },
+        {
+            q: "Which of the following is a common example of an Industrial Arts trade?",
+            options: ["Welding", "Creative writing", "Biology", "Accounting"],
+            correct: 0,
+            desc: "Welding is a core technical skill within the industrial arts/vocational field."
+        },
+        {
+            q: "According to the sources, when did industrial arts technically begin?",
+            options: ["During the 1900s", "Prehistoric times", "During World War II", "In the year 2000"],
+            correct: 1,
+            desc: "Industrial arts technically began in prehistoric times when humans first fashioned tools from stone and bone."
+        },
+        {
+            q: "When did formal instruction for industrial arts (manual training for trades) first arise?",
+            options: ["The early 1700s", "The late 1800s", "The early 2000s", "During the Digital Revolution"],
+            correct: 1,
+            desc: "Formal 'Manual Training' systems emerged in the late 19th century as a response to the Industrial Revolution."
+        },
+        {
+            q: "In the 1900s, what were industrial arts classes popularly known as?",
+            options: ["Art galleries", "Vocational schools", "Science laboratories", "Language centers"],
+            correct: 1,
+            desc: "They were often called Vocational or Trade schools, focusing on preparing students for specific jobs."
+        },
+        {
+            q: "Which specific skill was taught in 1900s industrial arts classes?",
+            options: ["Automobile repair", "Coding websites", "Quantum physics", "Modern dance"],
+            correct: 0,
+            desc: "As cars became common, automobile mechanics became a staple of industrial arts."
+        },
+        {
+            q: "How does a design student in Industrial Arts contribute to reducing waste?",
+            options: ["By using more plastic", "By creating new and advanced packaging for products", "By avoiding the use of machines", "By studying prehistoric tools"],
+            correct: 1,
+            desc: "Efficient design and smart packaging help reduce material waste in manufacturing."
+        },
+        {
+            q: "During the 1940s, there was a high demand for industrial artists who could design what?",
+            options: ["Furniture", "Shortwave radios", "Steam engines", "Smartphones"],
+            correct: 1,
+            desc: "Shortwave radios were critical for communication during the 1940s (WWII period)."
+        },
+        {
+            q: "Why was the skill of shortwave radio design specifically needed in the 1940s?",
+            options: ["For personal entertainment", "For use in World War II", "To start the Digital Revolution", "To improve textile manufacturing"],
+            correct: 1,
+            desc: "Reliable communication was a matter of national security and military success during the war."
+        },
+        {
+            q: "What is one way a machinery student contributes to the advancement of society?",
+            options: ["By ignoring safety rules", "By learning advanced safety techniques and streamlining manufacturing", "By only using hand tools from the 1800s", "By focusing on manual training without machines"],
+            correct: 1,
+            desc: "Improving safety and efficiency in manufacturing lowers costs and protects lives."
+        }
+    ];
+
+    let currentIdx = 0;
+    // Track which options have been clicked for the current question
+    let attempts = {}; 
+
+    function loadQuestion() {
+        const data = quizData[currentIdx];
+        document.getElementById('progress').innerText = `Question ${currentIdx + 1} of ${quizData.length}`;
+        document.getElementById('question-text').innerText = data.q;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        // Ensure attempts tracking exists for this question
+        if (!attempts[currentIdx]) attempts[currentIdx] = [];
+
+        data.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option';
+            btn.innerHTML = `<span class="option-letter">${letters[i]})</span> ${opt}`;
+            
+            // Check if this specific button was already clicked
+            if (attempts[currentIdx].includes(i)) {
+                if (i === data.correct) {
+                    btn.classList.add('correct-selected');
+                } else {
+                    btn.classList.add('wrong-selected');
+                }
+            }
+
+            btn.onclick = () => handleChoice(i);
+            container.appendChild(btn);
+        });
+
+        updateFeedback(data);
+        
+        document.getElementById('prev-btn').disabled = currentIdx === 0;
+        document.getElementById('next-btn').disabled = currentIdx === quizData.length - 1;
+    }
+
+    function handleChoice(idx) {
+        if (!attempts[currentIdx].includes(idx)) {
+            attempts[currentIdx].push(idx);
+        }
+        loadQuestion();
+    }
+
+    function updateFeedback(data) {
+        const feedback = document.getElementById('feedback');
+        const lastSelection = attempts[currentIdx][attempts[currentIdx].length - 1];
+
+        if (lastSelection !== undefined) {
+            const isCorrect = lastSelection === data.correct;
+            feedback.innerHTML = `
+                <strong style="color: ${isCorrect ? 'var(--success)' : 'var(--error)'}">
+                    ${isCorrect ? 'CORRECT!' : 'INCORRECT'}
+                </strong><br>
+                ${data.desc}
+            `;
+            feedback.classList.add('visible');
+        } else {
+            feedback.classList.remove('visible');
+        }
+    }
+
+    function changeQuestion(step) {
+        currentIdx += step;
+        loadQuestion();
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>
